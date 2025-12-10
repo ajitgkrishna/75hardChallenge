@@ -1,0 +1,38 @@
+<div class="gallery-container">
+    <header class="gallery-header">
+        <h1>Progress Gallery</h1>
+        <a routerLink="/" class="back-button">← Back to Tracker</a>
+    </header>
+
+    <div class="gallery-grid" *ngIf="images$ | async as images; else loading">
+        <div *ngIf="images.length === 0" class="no-images">
+            <p>No progress pictures uploaded yet.</p>
+            <p>Mark "Progress Pic" on the tracker to add one!</p>
+        </div>
+
+        <div class="gallery-item" *ngFor="let img of images" (click)="openImage(img.url)">
+            <div class="image-wrapper">
+                <img [src]="img.url" alt="Day {{ img.day }} Progress">
+                <div class="day-label">
+                    <span class="day-number">Day {{ img.day }}</span>
+                    <span class="date">{{ img.date | date:'mediumDate' }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <ng-template #loading>
+        <div class="loading">Loading gallery...</div>
+    </ng-template>
+
+    <!-- Full Screen Modal -->
+    <div class="modal-overlay" *ngIf="selectedImage" (click)="closeImage()">
+        <span class="close-button" (click)="closeImage()">&times;</span>
+
+        <!-- Navigation Arrows -->
+        <button class="nav-btn prev" (click)="prevImage($event)" *ngIf="hasPrev()">&#10094;</button>
+        <button class="nav-btn next" (click)="nextImage($event)" *ngIf="hasNext()">&#10095;</button>
+
+        <img [src]="selectedImage" class="full-image" (click)="$event.stopPropagation()">
+    </div>
+</div>
