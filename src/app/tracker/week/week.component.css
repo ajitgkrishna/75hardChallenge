@@ -1,0 +1,154 @@
+.week-card {
+  background: transparent;
+  margin-bottom: 2rem;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.week-header {
+  background-color: #B2DFDB;
+  /* Light Teal matches image */
+  padding: 12px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 0;
+  /* Boxy look */
+  margin-bottom: 5px;
+}
+
+.week-header h2 {
+  color: #37474F;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+  text-transform: capitalize;
+  letter-spacing: 0.5px;
+}
+
+.days-header {
+  display: grid;
+  grid-template-columns: repeat(7, 35px);
+  gap: 10px;
+  text-align: center;
+  font-weight: 600;
+  color: #546E7A;
+  font-size: 0.9rem;
+}
+
+.tasks-list {
+  background: rgba(255, 255, 255, 0.9);
+  /* Slight transparency */
+  padding: 15px 25px;
+}
+
+.task-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid transparent;
+  /* No visible separator in design */
+}
+
+.task-name {
+  color: #546E7A;
+  font-weight: 500;
+  font-size: 1rem;
+  flex: 1;
+}
+
+.checkboxes {
+  display: grid;
+  grid-template-columns: repeat(7, 35px);
+  gap: 10px;
+}
+
+.checkbox-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 35px;
+  height: 35px;
+}
+
+/* Hide default checkbox */
+.checkbox-container input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 100%;
+  width: 100%;
+  z-index: 2;
+}
+
+/* Custom Checkbox - Solid Square Style */
+.custom-checkbox {
+  width: 32px;
+  height: 32px;
+  background-color: #B2DFDB;
+  /* Light Teal (Unchecked) */
+  border-radius: 0;
+  /* Square as per design */
+  transition: all 0.2s;
+  position: relative;
+}
+
+/* Checked State */
+.checkbox-container input:checked~.custom-checkbox {
+  background-color: #B2DFDB;
+  /* Keep background same */
+}
+
+/* X Mark for Checked State */
+.checkbox-container input:checked~.custom-checkbox::after {
+  content: 'X';
+  /* Use X instead of checkmark */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #00695C;
+  /* Dark Teal X */
+  font-size: 24px;
+  font-family: 'Coming Soon', cursive, sans-serif;
+  /* Handwritten style X */
+  font-weight: bold;
+  line-height: 1;
+}
+
+/* Disabled State */
+.checkbox-container input:disabled~.custom-checkbox {
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: grayscale(20%);
+}
+
+/* Hover State */
+.checkbox-container input:not(:disabled):hover~.custom-checkbox {
+  background-color: #80CBC4;
+}
+
+/* Saving State - Spinner */
+.checkbox-container.saving input,
+.checkbox-container.saving .custom-checkbox {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.spinner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(0, 105, 92, 0.2);
+  border-left-color: #00695C;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  z-index: 3;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
