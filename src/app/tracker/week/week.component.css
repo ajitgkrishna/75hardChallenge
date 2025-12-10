@@ -5,21 +5,26 @@
 
 .week-card {
   background: white;
-  /* No shadow or border by default to match clean look, or subtle if needed */
-  /* box-shadow: 0 4px 15px rgba(0,0,0,0.05); */
+  /* Enable horizontal scroll on small screens */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  /* Ensure resizing doesn't hide content */
 }
 
 .week-grid {
   display: grid;
   /* First col auto/1fr, then 7 fixed columns for days */
-  grid-template-columns: minmax(200px, 1fr) repeat(7, 45px);
+  /* min-width to force scroll on small screens */
+  grid-template-columns: minmax(180px, 1fr) repeat(7, 45px);
+  min-width: 500px;
+  /* Ensure 7 cols + task labels fit */
   width: 100%;
 }
 
 /* --- Header Styles --- */
 .grid-header-row {
   display: contents;
-  /* Allows children to participate in the main grid */
 }
 
 .week-title {
@@ -29,10 +34,17 @@
   font-weight: 700;
   color: #37474F;
   grid-column: 1;
-  /* First column */
   display: flex;
   align-items: center;
   font-size: 1.1rem;
+
+  /* Sticky First Column */
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  /* Above regular cells */
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+  /* Shadow to indicate scroll */
 }
 
 .day-number {
@@ -61,7 +73,13 @@
   display: flex;
   align-items: center;
   background-color: white;
-  /* Ensure white background */
+  /* Ensure white background so text doesn't overlap */
+
+  /* Sticky First Column */
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
 }
 
 .checkbox-cell {
@@ -72,15 +90,10 @@
   background-color: white;
 }
 
-/* Row banding or separators if needed based on image? Image shows pure white. */
-/* If image has alternating colors, add here. Assuming white body based on request. */
-
 .custom-checkbox-container {
   width: 28px;
   height: 28px;
   background-color: #B2DFDB;
-  /* Light teal placeholder when unchecked */
-  /* Or #E0F2F1 specifically for unchecked state in the image? looks pale teal */
   cursor: pointer;
   display: flex;
   justify-content: center;
@@ -97,13 +110,10 @@
   opacity: 0.5;
 }
 
-/* Checked State - The X Mark */
 .x-mark {
   color: #004D40;
-  /* Darker Teal for better visibility */
   font-family: cursive;
   font-size: 1.8rem;
-  /* Slightly smaller to fit better */
   font-weight: 900;
   line-height: 1;
   display: flex;
@@ -111,7 +121,6 @@
   align-items: center;
   width: 100%;
   height: 100%;
-  /* padding-bottom: 5px; Removed to center perfectly */
 }
 
 .spinner {
@@ -130,5 +139,15 @@
 
   100% {
     transform: rotate(360deg);
+  }
+}
+
+/* Mobile Adjustments */
+@media (max-width: 600px) {
+
+  .week-title,
+  .task-label {
+    padding: 10px;
+    font-size: 0.9rem;
   }
 }
