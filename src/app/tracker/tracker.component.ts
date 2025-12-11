@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { ProgressService } from '../services/progress.service';
 import { AuthService } from '../services/auth.service';
 import { WeekComponent } from './week/week.component';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
 
 @Component({
   selector: 'app-tracker',
@@ -17,14 +17,39 @@ export class TrackerComponent implements OnInit {
   private progressService = inject(ProgressService);
   private authService = inject(AuthService);
 
-  progress$!: Observable<any>;
+  progress$ = new BehaviorSubject<any[]>([]);
   startDate$!: Observable<Date>;
+  challengeStarted$!: Observable<boolean>;
   currentUser$ = this.authService.currentUser$;
 
   ngOnInit() {
     // Force refresh on init
-    this.progress$ = this.progressService.getProgress();
+    this.loadProgress();
     this.startDate$ = this.progressService.getStartDate();
+    this.challengeStarted$ = this.progressService.getChallengeStatus();
+  }
+
+  private loadProgress() {
+    this.progressService.getProgress().subscribe(data => {
+      console.log('Progress loaded:', data);
+      this.progress$.next(data);
+    });
+  }
+
+  startChallenge() {
+    console.log('Start Challenge button clicked');
+    if (confirm('Are you ready to start your 75 Hard journey? Once started, you can track your daily progress!')) {
+      console.log('Start Challenge confirmed');
+      this.progressService.startChallenge().subscribe(() => {
+        console.log('Challenge started successfully');
+        // Force refresh of observables after starting challenge
+        this.loadProgress();
+        this.startDate$ = this.progressService.getStartDate();
+        this.challengeStarted$ = this.progressService.getChallengeStatus();
+      });
+    } else {
+      console.log('Start Challenge cancelled');
+    }
   }
 
   reset() {
@@ -32,10 +57,12 @@ export class TrackerComponent implements OnInit {
     if (confirm('Are you sure you want to reset all progress?')) {
       console.log('Reset confirmed');
       this.progressService.resetProgress().subscribe(() => {
-        console.log('Reset observable completed');
-        // Force refresh of observables after reset is complete
-        this.progress$ = this.progressService.getProgress();
+        console.log('Reset completed');
+        // Load fresh progress through getProgress() to ensure proper filtering
+        this.loadProgress();
+        // Also refresh other observables
         this.startDate$ = this.progressService.getStartDate();
+        this.challengeStarted$ = this.progressService.getChallengeStatus();
       });
     } else {
       console.log('Reset cancelled');
@@ -44,5 +71,9 @@ export class TrackerComponent implements OnInit {
 
   logout() {
     this.authService.logout();
+  }
+
+  trackByWeek(index: number, week: any): number {
+    return week.weekNumber;
   }
 }
