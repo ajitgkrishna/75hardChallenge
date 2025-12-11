@@ -1,0 +1,32 @@
+<div class="tracker-container">
+    <div class="decorative-x left">
+        <!-- Optional decorative elements -->
+    </div>
+    <div class="decorative-x right">
+        <span>x</span><span>x</span><span>x</span><span>x</span><span>x</span>
+    </div>
+
+    <header class="header">
+        <div class="greeting" *ngIf="currentUser$ | async as user">
+            Welcome, {{ user }}!
+        </div>
+        <h1>
+            <span class="hard-text">#75HARD</span>
+            <span class="checklist-text">Checklist</span>
+        </h1>
+        <div class="start-date" *ngIf="startDate$ | async as date">
+            Start Date: {{ date | date:'mediumDate' }}
+        </div>
+    </header>
+
+    <div class="actions">
+        <a routerLink="/gallery" class="gallery-btn">View Gallery</a>
+        <button (click)="reset()" class="reset-btn">Reset Progress</button>
+        <button (click)="logout()" class="logout-btn">Logout</button>
+    </div>
+
+    <div class="weeks-grid">
+        <app-week *ngFor="let week of progress$ | async" [week]="week">
+        </app-week>
+    </div>
+</div>
