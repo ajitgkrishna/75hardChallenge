@@ -15,12 +15,12 @@
 
             <div class="checkbox-cell" *ngFor="let day of week.days">
                 <div class="custom-checkbox-container" [class.checked]="getDayStatus(day, task.key)"
-                    [class.disabled]="day.day > currentDay" [class.saving]="isSaving(day.day, task.key)"
-                    (click)="handleTaskClick(day.day, task.key, $event)">
+                    [class.disabled]="!challengeStarted || day.day > currentDay"
+                    [class.saving]="isSaving(day.day, task.key)" (click)="handleTaskClick(day.day, task.key, $event)">
 
                     <!-- Hidden native checkbox for accessibility/logic -->
                     <input type="checkbox" style="display:none;" [checked]="getDayStatus(day, task.key)"
-                        [disabled]="day.day > currentDay || isSaving(day.day, task.key)">
+                        [disabled]="!challengeStarted || day.day > currentDay || isSaving(day.day, task.key)">
 
                     <!-- Visual X mark - Only show if NOT saving -->
                     <span class="x-mark" *ngIf="!isSaving(day.day, task.key) && getDayStatus(day, task.key)">✕</span>

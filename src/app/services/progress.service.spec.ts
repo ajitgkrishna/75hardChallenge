@@ -120,7 +120,7 @@ describe('ProgressService', () => {
 
             const req = httpMock.expectOne(`${environment.apiUrl}/GetStartDate`);
             expect(req.request.method).toBe('GET');
-            req.flush({ startDate: mockDate });
+            req.flush({ startDate: mockDate, challengeStarted: true });
         });
 
         it('should cache start date and not make multiple requests', (done) => {
@@ -133,7 +133,7 @@ describe('ProgressService', () => {
             });
 
             const req = httpMock.expectOne(`${environment.apiUrl}/GetStartDate`);
-            req.flush({ startDate: mockDate });
+            req.flush({ startDate: mockDate, challengeStarted: true });
             // Should only be one request due to caching
         });
 
@@ -158,6 +158,62 @@ describe('ProgressService', () => {
 
             const req = httpMock.expectOne(`${environment.apiUrl}/GetStartDate`);
             req.error(new ProgressEvent('Network error'));
+        });
+    });
+
+    describe('getChallengeStatus', () => {
+        it('should fetch challenge status from API', (done) => {
+            service.getChallengeStatus().subscribe(status => {
+                expect(status).toBe(true);
+                done();
+            });
+
+            const req = httpMock.expectOne(`${environment.apiUrl}/GetStartDate`);
+            req.flush({ startDate: '2024-01-01T00:00:00Z', challengeStarted: true });
+        });
+
+        it('should return false when challenge not started', (done) => {
+            service.getChallengeStatus().subscribe(status => {
+                expect(status).toBe(false);
+                done();
+            });
+
+            const req = httpMock.expectOne(`${environment.apiUrl}/GetStartDate`);
+            req.flush({ startDate: '2024-01-01T00:00:00Z', challengeStarted: false });
+        });
+
+        it('should handle missing challengeStarted and default to false', (done) => {
+            service.getChallengeStatus().subscribe(status => {
+                expect(status).toBe(false);
+                done();
+            });
+
+            const req = httpMock.expectOne(`${environment.apiUrl}/GetStartDate`);
+            req.flush({ startDate: '2024-01-01T00:00:00Z' });
+        });
+    });
+
+    describe('getStartDateInfo', () => {
+        it('should fetch both start date and challenge status', (done) => {
+            service.getStartDateInfo().subscribe(info => {
+                expect(info.startDate).toBeInstanceOf(Date);
+                expect(info.challengeStarted).toBe(true);
+                done();
+            });
+
+            const req = httpMock.expectOne(`${environment.apiUrl}/GetStartDate`);
+            req.flush({ startDate: '2024-01-01T00:00:00Z', challengeStarted: true });
+        });
+
+        it('should cache the response', (done) => {
+            service.getStartDateInfo().subscribe(() => {
+                service.getStartDateInfo().subscribe(() => {
+                    done();
+                });
+            });
+
+            const req = httpMock.expectOne(`${environment.apiUrl}/GetStartDate`);
+            req.flush({ startDate: '2024-01-01T00:00:00Z', challengeStarted: true });
         });
     });
 
@@ -214,6 +270,51 @@ describe('ProgressService', () => {
             expect(req.request.method).toBe('POST');
             expect(req.request.body).toEqual({});
             req.flush(null);
+        });
+
+        it('should clear cache after reset', (done) => {
+            // First call to populate cache
+            service.getStartDateInfo().subscribe(() => {
+                // Reset should clear cache
+                service.resetProgress().subscribe(() => {
+                    done();
+                });
+
+                const resetReq = httpMock.expectOne(`${environment.apiUrl}/ResetProgress`);
+                resetReq.flush(null);
+            });
+
+            const req = httpMock.expectOne(`${environment.apiUrl}/GetStartDate`);
+            req.flush({ startDate: '2024-01-01T00:00:00Z', challengeStarted: true });
+        });
+    });
+
+    describe('startChallenge', () => {
+        it('should send start challenge request', (done) => {
+            service.startChallenge().subscribe(() => {
+                done();
+            });
+
+            const req = httpMock.expectOne(`${environment.apiUrl}/StartChallenge`);
+            expect(req.request.method).toBe('POST');
+            expect(req.request.body).toEqual({});
+            req.flush(null);
+        });
+
+        it('should clear cache after starting challenge', (done) => {
+            // First call to populate cache
+            service.getStartDateInfo().subscribe(() => {
+                // Start challenge should clear cache
+                service.startChallenge().subscribe(() => {
+                    done();
+                });
+
+                const startReq = httpMock.expectOne(`${environment.apiUrl}/StartChallenge`);
+                startReq.flush(null);
+            });
+
+            const req = httpMock.expectOne(`${environment.apiUrl}/GetStartDate`);
+            req.flush({ startDate: '2024-01-01T00:00:00Z', challengeStarted: false });
         });
     });
 

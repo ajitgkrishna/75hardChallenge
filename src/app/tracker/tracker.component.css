@@ -91,6 +91,12 @@ a {
     box-shadow: 0 2px 5px rgba(255, 112, 67, 0.4);
 }
 
+.start-btn {
+    background-color: #43A047;
+    color: white;
+    box-shadow: 0 2px 5px rgba(67, 160, 71, 0.4);
+}
+
 .gallery-btn {
     background-color: #26A69A;
     color: white;

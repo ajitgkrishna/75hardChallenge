@@ -14,19 +14,27 @@
             <span class="hard-text">#75HARD</span>
             <span class="checklist-text">Checklist</span>
         </h1>
-        <div class="start-date" *ngIf="startDate$ | async as date">
-            Start Date: {{ date | date:'mediumDate' }}
+        <div class="start-date">
+            <ng-container *ngIf="challengeStarted$ | async; else notStarted">
+                Start Date: {{ (startDate$ | async) | date:'mediumDate' }}
+            </ng-container>
+            <ng-template #notStarted>
+                Status: Not Yet Started
+            </ng-template>
         </div>
     </header>
 
     <div class="actions">
         <a routerLink="/gallery" class="gallery-btn">View Gallery</a>
-        <button (click)="reset()" class="reset-btn">Reset Progress</button>
+        <button *ngIf="!(challengeStarted$ | async)" (click)="startChallenge()" class="start-btn">Start
+            Challenge</button>
+        <button *ngIf="challengeStarted$ | async" (click)="reset()" class="reset-btn">Reset Progress</button>
         <button (click)="logout()" class="logout-btn">Logout</button>
     </div>
 
     <div class="weeks-grid">
-        <app-week *ngFor="let week of progress$ | async" [week]="week">
+        <app-week *ngFor="let week of progress$ | async" [week]="week"
+            [challengeStarted]="(challengeStarted$ | async) || false">
         </app-week>
     </div>
 </div>

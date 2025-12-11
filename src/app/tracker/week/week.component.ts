@@ -1,4 +1,4 @@
-import { Component, Input, inject, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
+import { Component, Input, inject, OnInit, OnDestroy, OnChanges, SimpleChanges, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { WeekProgress, DailyProgress } from '../../models/progress.model';
 import { ProgressService } from '../../services/progress.service';
@@ -11,8 +11,9 @@ import { Subscription } from 'rxjs';
   templateUrl: './week.component.html',
   styleUrls: ['./week.component.css']
 })
-export class WeekComponent implements OnInit, OnDestroy {
+export class WeekComponent implements OnInit, OnDestroy, OnChanges {
   @Input({ required: true }) week!: WeekProgress;
+  @Input() challengeStarted: boolean = false;
 
   private progressService = inject(ProgressService);
   private cdr = inject(ChangeDetectorRef);
@@ -23,7 +24,7 @@ export class WeekComponent implements OnInit, OnDestroy {
     { key: 'diet', label: 'Follow Your Diet' },
     { key: 'workoutOutside', label: '45 Min Workout (Outside)' },
     { key: 'workoutAnywhere', label: '45 Min Workout (Anywhere)' },
-    { key: 'water', label: 'Drink 1 Gallon Water' },
+    { key: 'water', label: 'Drink 4 Liters Water' },
     { key: 'progressPic', label: 'Progress Pic' },
     { key: 'reading', label: '10 Min of Reading' }
   ];
@@ -46,6 +47,14 @@ export class WeekComponent implements OnInit, OnDestroy {
     if (this.sub) this.sub.unsubscribe();
   }
 
+  ngOnChanges(changes: SimpleChanges) {
+    // Detect when week input changes (e.g., after reset)
+    if (changes['week'] && !changes['week'].firstChange) {
+      console.log('Week data changed, triggering change detection');
+      this.cdr.detectChanges();
+    }
+  }
+
   getDayStatus(day: DailyProgress, key: string): boolean {
     // @ts-ignore
     return day[key];
@@ -56,6 +65,11 @@ export class WeekComponent implements OnInit, OnDestroy {
   }
 
   handleTaskClick(day: number, key: string, event: Event): void {
+    // Prevent editing if challenge hasn't started
+    if (!this.challengeStarted) {
+      return;
+    }
+
     if (day > this.currentDay && !this.isSaving(day, key)) {
       // Prevent editing future days
       return;

@@ -11,8 +11,8 @@ export class ProgressService {
     private http = inject(HttpClient);
     private apiUrl = environment.apiUrl;
 
-    // Cache start date to avoid frequent fetching
-    private startDate$: Observable<Date> | null = null;
+    // Cache start date and challenge status to avoid frequent fetching
+    private startDateInfo$: Observable<{ startDate: Date, challengeStarted: boolean }> | null = null;
 
     getProgress(): Observable<WeekProgress[]> {
         return this.http.get<any[]>(`${this.apiUrl}/GetProgress`).pipe(
@@ -23,51 +23,62 @@ export class ProgressService {
             map(backendWeeks => {
                 if (!backendWeeks || !Array.isArray(backendWeeks)) return [];
 
-                return backendWeeks.map((bw: any) => {
-                    // Handle both PascalCase (C# default) and camelCase (JSON default)
-                    const days = bw.Days || bw.days || [];
-                    return {
-                        weekNumber: bw.WeekNumber || bw.weekNumber,
-                        days: days.map((bd: any) => ({
-                            day: bd.Day || bd.day,
-                            diet: bd.Diet || bd.diet,
-                            workoutOutside: bd.WorkoutOutside || bd.workoutOutside,
-                            workoutAnywhere: bd.WorkoutAnywhere || bd.workoutAnywhere,
-                            water: bd.Water || bd.water,
-                            reading: bd.Reading || bd.reading,
-                            progressPic: bd.ProgressPic || bd.progressPic,
-                            photoUrl: bd.PhotoUrl || bd.photoUrl
-                        }))
-                    };
-                })
-                    .filter((w: any) => w.weekNumber > 0 && w.days.length > 0)
+                return backendWeeks
+                    .map((bw: any) => {
+                        // Handle both PascalCase (C# default) and camelCase (JSON default)
+                        const days = bw.Days || bw.days || [];
+                        const weekNumber = bw.WeekNumber ?? bw.weekNumber ?? 0;
+
+                        return {
+                            weekNumber: weekNumber,
+                            days: days.map((bd: any) => ({
+                                day: bd.Day ?? bd.day ?? 0,
+                                diet: bd.Diet ?? bd.diet ?? false,
+                                workoutOutside: bd.WorkoutOutside ?? bd.workoutOutside ?? false,
+                                workoutAnywhere: bd.WorkoutAnywhere ?? bd.workoutAnywhere ?? false,
+                                water: bd.Water ?? bd.water ?? false,
+                                reading: bd.Reading ?? bd.reading ?? false,
+                                progressPic: bd.ProgressPic ?? bd.progressPic ?? false,
+                                photoUrl: bd.PhotoUrl ?? bd.photoUrl ?? null
+                            }))
+                        };
+                    })
+                    .filter((w: any) => w.weekNumber > 0 && w.days && w.days.length > 0)
                     .sort((a: any, b: any) => a.weekNumber - b.weekNumber);
             })
         );
     }
 
-    getStartDate(): Observable<Date> {
-        if (!this.startDate$) {
-            this.startDate$ = this.http.get<{ startDate: string }>(`${this.apiUrl}/GetStartDate`).pipe(
+    getStartDateInfo(): Observable<{ startDate: Date, challengeStarted: boolean }> {
+        if (!this.startDateInfo$) {
+            this.startDateInfo$ = this.http.get<{ startDate: string, challengeStarted: boolean }>(`${this.apiUrl}/GetStartDate`).pipe(
                 map(response => {
                     if (!response || !response.startDate) {
-                        return new Date();
+                        return { startDate: new Date(), challengeStarted: false };
                     }
                     const parsed = new Date(response.startDate);
                     if (isNaN(parsed.getTime())) {
-                        return new Date();
+                        return { startDate: new Date(), challengeStarted: response.challengeStarted || false };
                     }
-                    return parsed;
+                    return { startDate: parsed, challengeStarted: response.challengeStarted || false };
                 }),
                 // Force cache busting on error or retry
                 catchError(err => {
-                    console.error('Failed to get start date, defaulting to TODAY', err);
-                    return of(new Date());
+                    console.error('Failed to get start date info, defaulting to TODAY and not started', err);
+                    return of({ startDate: new Date(), challengeStarted: false });
                 }),
                 shareReplay(1)
             );
         }
-        return this.startDate$;
+        return this.startDateInfo$;
+    }
+
+    getStartDate(): Observable<Date> {
+        return this.getStartDateInfo().pipe(map(info => info.startDate));
+    }
+
+    getChallengeStatus(): Observable<boolean> {
+        return this.getStartDateInfo().pipe(map(info => info.challengeStarted));
     }
 
     getCurrentDay(): Observable<number> {
@@ -108,8 +119,23 @@ export class ProgressService {
         return this.http.post<void>(`${this.apiUrl}/UpdateProgress`, payload);
     }
 
-    resetProgress(): Observable<void> {
-        return this.http.post<void>(`${this.apiUrl}/ResetProgress`, {});
+    resetProgress(): Observable<any[]> {
+        return this.http.post<any[]>(`${this.apiUrl}/ResetProgress`, {}).pipe(
+            tap(() => {
+                // Clear cache after reset completes
+                this.startDateInfo$ = null;
+            })
+        );
+    }
+
+    startChallenge(): Observable<void> {
+        const userId = localStorage.getItem('userId');
+        return this.http.post<void>(`${this.apiUrl}/StartChallenge?userId=${userId}`, {}).pipe(
+            tap(() => {
+                // Clear cache after challenge starts
+                this.startDateInfo$ = null;
+            })
+        );
     }
 
     uploadProgressPic(day: number, file: File): Observable<void> {

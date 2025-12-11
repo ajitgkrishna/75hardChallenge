@@ -23,7 +23,9 @@ describe('TrackerComponent', () => {
         const progressServiceSpy = {
             getProgress: vi.fn().mockReturnValue(of(mockProgress)),
             getStartDate: vi.fn().mockReturnValue(of(new Date('2024-01-01'))),
-            resetProgress: vi.fn().mockReturnValue(of(void 0))
+            getChallengeStatus: vi.fn().mockReturnValue(of(true)),
+            resetProgress: vi.fn().mockReturnValue(of(void 0)),
+            startChallenge: vi.fn().mockReturnValue(of(void 0))
         };
 
         const authServiceSpy = {
@@ -50,13 +52,15 @@ describe('TrackerComponent', () => {
     });
 
     describe('ngOnInit', () => {
-        it('should load progress and start date on init', () => {
+        it('should load progress, start date, and challenge status on init', () => {
             fixture.detectChanges(); // Triggers ngOnInit
 
             expect(progressService.getProgress).toHaveBeenCalled();
             expect(progressService.getStartDate).toHaveBeenCalled();
+            expect(progressService.getChallengeStatus).toHaveBeenCalled();
             expect(component.progress$).toBeDefined();
             expect(component.startDate$).toBeDefined();
+            expect(component.challengeStarted$).toBeDefined();
         });
 
         it('should set currentUser$ from AuthService', () => {
@@ -101,15 +105,62 @@ describe('TrackerComponent', () => {
             confirmSpy.mockRestore();
         });
 
-        it('should refresh progress and start date after reset', () => {
+        it('should refresh progress, start date, and challenge status after reset', () => {
             const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
             vi.clearAllMocks();
 
             component.reset();
 
-            // Should be called twice: once in ngOnInit, once after reset
+            // Should be called after reset
             expect(progressService.getProgress).toHaveBeenCalled();
             expect(progressService.getStartDate).toHaveBeenCalled();
+            expect(progressService.getChallengeStatus).toHaveBeenCalled();
+            confirmSpy.mockRestore();
+        });
+    });
+
+    describe('startChallenge', () => {
+        beforeEach(() => {
+            fixture.detectChanges();
+        });
+
+        it('should show confirmation dialog', () => {
+            const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+            component.startChallenge();
+
+            expect(confirmSpy).toHaveBeenCalledWith('Are you ready to start your 75 Hard journey? Once started, you can track your daily progress!');
+            confirmSpy.mockRestore();
+        });
+
+        it('should call startChallenge when confirmed', () => {
+            const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+            component.startChallenge();
+
+            expect(progressService.startChallenge).toHaveBeenCalled();
+            confirmSpy.mockRestore();
+        });
+
+        it('should not call startChallenge when cancelled', () => {
+            const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+            vi.clearAllMocks();
+
+            component.startChallenge();
+
+            expect(progressService.startChallenge).not.toHaveBeenCalled();
+            confirmSpy.mockRestore();
+        });
+
+        it('should refresh progress, start date, and challenge status after starting', () => {
+            const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+            vi.clearAllMocks();
+
+            component.startChallenge();
+
+            expect(progressService.getProgress).toHaveBeenCalled();
+            expect(progressService.getStartDate).toHaveBeenCalled();
+            expect(progressService.getChallengeStatus).toHaveBeenCalled();
             confirmSpy.mockRestore();
         });
     });

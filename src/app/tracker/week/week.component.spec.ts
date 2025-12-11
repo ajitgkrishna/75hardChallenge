@@ -35,6 +35,7 @@ describe('WeekComponent', () => {
         fixture = TestBed.createComponent(WeekComponent);
         component = fixture.componentInstance;
         component.week = mockWeek;
+        component.challengeStarted = true; // Default to challenge started for most tests
         progressService = TestBed.inject(ProgressService);
     });
 
@@ -115,6 +116,22 @@ describe('WeekComponent', () => {
             component.handleTaskClick(2, 'diet', new Event('click'));
 
             expect(progressService.updateProgress).not.toHaveBeenCalled();
+        });
+
+        it('should not allow editing when challenge not started', () => {
+            component.challengeStarted = false;
+
+            component.handleTaskClick(2, 'diet', new Event('click'));
+
+            expect(progressService.updateProgress).not.toHaveBeenCalled();
+        });
+
+        it('should allow editing when challenge is started', () => {
+            component.challengeStarted = true;
+
+            component.handleTaskClick(2, 'diet', new Event('click'));
+
+            expect(progressService.updateProgress).toHaveBeenCalled();
         });
     });
 
