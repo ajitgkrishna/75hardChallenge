@@ -1,10 +1,10 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ProgressService } from '../services/progress.service';
 import { AuthService } from '../services/auth.service';
 import { WeekComponent } from './week/week.component';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, interval, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-tracker',
@@ -13,7 +13,7 @@ import { Observable, BehaviorSubject } from 'rxjs';
   templateUrl: './tracker.component.html',
   styleUrls: ['./tracker.component.css']
 })
-export class TrackerComponent implements OnInit {
+export class TrackerComponent implements OnInit, OnDestroy {
   private progressService = inject(ProgressService);
   private authService = inject(AuthService);
 
@@ -22,11 +22,29 @@ export class TrackerComponent implements OnInit {
   challengeStarted$!: Observable<boolean>;
   currentUser$ = this.authService.currentUser$;
 
+  private pollingSubscription?: Subscription;
+
   ngOnInit() {
     // Force refresh on init
     this.loadProgress();
     this.startDate$ = this.progressService.getStartDate();
     this.challengeStarted$ = this.progressService.getChallengeStatus();
+
+    // Auto-refresh every 30 seconds for cross-device sync
+    this.pollingSubscription = interval(30000).subscribe(() => {
+      // Only poll if page is visible (user is actively viewing)
+      if (document.visibilityState === 'visible') {
+        console.log('Auto-refreshing progress...');
+        this.loadProgress();
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    // Clean up polling when component is destroyed
+    if (this.pollingSubscription) {
+      this.pollingSubscription.unsubscribe();
+    }
   }
 
   private loadProgress() {
