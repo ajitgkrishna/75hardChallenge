@@ -25,16 +25,22 @@ export class TrackerComponent implements OnInit, OnDestroy {
   private pollingSubscription?: Subscription;
 
   ngOnInit() {
-    // Force refresh on init
-    this.loadProgress();
+    // Force refresh start date info to ensure GetStartDate is called
+    this.progressService.refreshStartDateInfo();
+
+    // Initialize observables
     this.startDate$ = this.progressService.getStartDate();
     this.challengeStarted$ = this.progressService.getChallengeStatus();
+
+    // Load progress data
+    this.loadProgress();
 
     // Auto-refresh every 30 seconds for cross-device sync
     this.pollingSubscription = interval(30000).subscribe(() => {
       // Only poll if page is visible (user is actively viewing)
       if (document.visibilityState === 'visible') {
         console.log('Auto-refreshing progress...');
+        this.progressService.refreshStartDateInfo();
         this.loadProgress();
       }
     });
@@ -60,10 +66,13 @@ export class TrackerComponent implements OnInit, OnDestroy {
       console.log('Start Challenge confirmed');
       this.progressService.startChallenge().subscribe(() => {
         console.log('Challenge started successfully');
-        // Force refresh of observables after starting challenge
-        this.loadProgress();
+        // Force refresh of start date info to get updated data
+        this.progressService.refreshStartDateInfo();
+        // Reinitialize observables with fresh data
         this.startDate$ = this.progressService.getStartDate();
         this.challengeStarted$ = this.progressService.getChallengeStatus();
+        // Load fresh progress
+        this.loadProgress();
       });
     } else {
       console.log('Start Challenge cancelled');
@@ -76,11 +85,13 @@ export class TrackerComponent implements OnInit, OnDestroy {
       console.log('Reset confirmed');
       this.progressService.resetProgress().subscribe(() => {
         console.log('Reset completed');
-        // Load fresh progress through getProgress() to ensure proper filtering
-        this.loadProgress();
-        // Also refresh other observables
+        // Force refresh of start date info to get updated data
+        this.progressService.refreshStartDateInfo();
+        // Reinitialize observables with fresh data
         this.startDate$ = this.progressService.getStartDate();
         this.challengeStarted$ = this.progressService.getChallengeStatus();
+        // Load fresh progress
+        this.loadProgress();
       });
     } else {
       console.log('Reset cancelled');

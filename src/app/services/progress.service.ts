@@ -58,9 +58,26 @@ export class ProgressService {
                     }
                     const parsed = new Date(response.startDate);
                     if (isNaN(parsed.getTime())) {
-                        return { startDate: new Date(), challengeStarted: response.challengeStarted || false };
+                        return { startDate: new Date(), challengeStarted: false };
                     }
-                    return { startDate: parsed, challengeStarted: response.challengeStarted || false };
+
+                    // Determine if challenge has started by comparing dates
+                    // If startDate <= currentDate, challenge has started
+                    const now = new Date();
+                    now.setHours(0, 0, 0, 0);
+                    const startDateOnly = new Date(parsed);
+                    startDateOnly.setHours(0, 0, 0, 0);
+
+                    const challengeStarted = startDateOnly <= now;
+
+                    console.log('GetStartDate response:', {
+                        rawStartDate: response.startDate,
+                        parsedStartDate: parsed,
+                        currentDate: now,
+                        challengeStarted: challengeStarted
+                    });
+
+                    return { startDate: parsed, challengeStarted: challengeStarted };
                 }),
                 // Force cache busting on error or retry
                 catchError(err => {
@@ -79,6 +96,11 @@ export class ProgressService {
 
     getChallengeStatus(): Observable<boolean> {
         return this.getStartDateInfo().pipe(map(info => info.challengeStarted));
+    }
+
+    refreshStartDateInfo(): void {
+        // Clear cache to force a fresh API call
+        this.startDateInfo$ = null;
     }
 
     getCurrentDay(): Observable<number> {
