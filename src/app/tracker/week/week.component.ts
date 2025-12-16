@@ -60,6 +60,16 @@ export class WeekComponent implements OnInit, OnDestroy, OnChanges {
     return day[key];
   }
 
+  isDayEditable(day: number): boolean {
+    return this.challengeStarted && day === this.currentDay;
+  }
+
+  getDayClass(day: number): string {
+    if (day < this.currentDay) return 'day-past';
+    if (day === this.currentDay) return 'day-current';
+    return 'day-future';
+  }
+
   isSaving(day: number, key: string): boolean {
     return this.savingState[`${day}-${key}`] || false;
   }
@@ -70,8 +80,8 @@ export class WeekComponent implements OnInit, OnDestroy, OnChanges {
       return;
     }
 
-    if (day > this.currentDay && !this.isSaving(day, key)) {
-      // Prevent editing future days
+    // Only allow editing the current day
+    if (day !== this.currentDay) {
       return;
     }
 

@@ -110,6 +110,48 @@
   opacity: 0.5;
 }
 
+/* Day State Styles */
+.checkbox-cell.day-past {
+  background-color: #f5f5f5;
+}
+
+.checkbox-cell.day-past .custom-checkbox-container {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.checkbox-cell.day-current {
+  background-color: #E0F2F1;
+  position: relative;
+}
+
+.checkbox-cell.day-current::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid #00897B;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.checkbox-cell.day-current .custom-checkbox-container {
+  cursor: pointer;
+  opacity: 1;
+}
+
+.checkbox-cell.day-future {
+  background-color: #fafafa;
+}
+
+.checkbox-cell.day-future .custom-checkbox-container {
+  opacity: 0.3;
+  cursor: not-allowed;
+  background-color: #e0e0e0;
+}
+
 .x-mark {
   color: #004D40;
   font-family: cursive;

@@ -4,10 +4,6 @@
     padding: 40px 60px;
     font-family: 'Montserrat', sans-serif;
     color: #455A64;
-    background-image: url('/assets/bg-brushes.png');
-    background-size: 100% auto;
-    background-position: top center;
-    background-repeat: no-repeat;
     position: relative;
     min-height: 100vh;
 }

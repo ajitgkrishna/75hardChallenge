@@ -13,14 +13,14 @@
         <div class="grid-row" *ngFor="let task of tasks; let last = last" [class.last-row]="last">
             <div class="task-label">{{ task.label }}</div>
 
-            <div class="checkbox-cell" *ngFor="let day of week.days">
+            <div class="checkbox-cell" *ngFor="let day of week.days" [ngClass]="getDayClass(day.day)">
                 <div class="custom-checkbox-container" [class.checked]="getDayStatus(day, task.key)"
-                    [class.disabled]="!challengeStarted || day.day > currentDay"
-                    [class.saving]="isSaving(day.day, task.key)" (click)="handleTaskClick(day.day, task.key, $event)">
+                    [class.disabled]="!isDayEditable(day.day)" [class.saving]="isSaving(day.day, task.key)"
+                    (click)="handleTaskClick(day.day, task.key, $event)">
 
                     <!-- Hidden native checkbox for accessibility/logic -->
                     <input type="checkbox" style="display:none;" [checked]="getDayStatus(day, task.key)"
-                        [disabled]="!challengeStarted || day.day > currentDay || isSaving(day.day, task.key)">
+                        [disabled]="!isDayEditable(day.day) || isSaving(day.day, task.key)">
 
                     <!-- Visual X mark - Only show if NOT saving -->
                     <span class="x-mark" *ngIf="!isSaving(day.day, task.key) && getDayStatus(day, task.key)">✕</span>

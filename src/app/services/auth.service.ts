@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
+import { ProgressService } from './progress.service';
 
 @Injectable({
     providedIn: 'root'
@@ -14,6 +15,7 @@ export class AuthService {
 
     private http = inject(HttpClient);
     private router = inject(Router);
+    private progressService = inject(ProgressService);
 
     login(username: string, password?: string): void {
         const loginPayload = { username, password };
@@ -31,6 +33,9 @@ export class AuthService {
                     localStorage.setItem('currentUser', username);
                     this.currentUserSubject.next(username);
 
+                    // Clear cached start date info to force fresh API call after login
+                    this.progressService.refreshStartDateInfo();
+
                     this.router.navigate(['/']);
                 },
                 error: (err) => {
@@ -43,7 +48,12 @@ export class AuthService {
     logout(): void {
         localStorage.removeItem('authToken');
         localStorage.removeItem('currentUser');
+        localStorage.removeItem('userId');
         this.currentUserSubject.next(null);
+
+        // Clear cached start date info on logout
+        this.progressService.refreshStartDateInfo();
+
         this.router.navigate(['/login']);
     }
 
